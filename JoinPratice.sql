@@ -13,6 +13,23 @@ FROM
         INNER JOIN
     employees AS emp ON emp.emp_no = dm.emp_no;
 
+SELECT 
+    employees.first_name,
+    employees.last_name,
+    employees.hire_date,
+    titles.title,
+    titles.from_date,
+    departments.dept_name
+FROM
+    employees
+        INNER JOIN
+    titles ON employees.emp_no = titles.emp_no
+        INNER JOIN
+    dept_manager ON employees.emp_no = dept_manager.emp_no
+        INNER JOIN
+    departments ON dept_manager.dept_no = departments.dept_no
+;
+
 -- RIGHT JOIN
 SELECT 
     *
@@ -54,4 +71,10 @@ FROM
 WHERE
     e.emp_no < 10011
 ORDER BY e.emp_no , d.dept_name
+;
+
+-- Extras
+SELECT employees.gender, COUNT(*)
+FROM employees
+GROUP BY employees.gender;
 
