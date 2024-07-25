@@ -42,6 +42,52 @@ FROM salaries
 ) AS a
 WHERE a.row_num = 2;
 
+-- Exercise 274
+SELECT a.emp_no, a.salary, a.emp_rank FROM
+	( 
+		SELECT emp_no, salary, 
+        RANK() OVER (PARTITION BY emp_no ORDER BY salary) AS emp_rank FROM salaries
+        WHERE emp_no BETWEEN 10500 AND 10600 
+	) AS a;
+
+
+SELECT a.emp_no, a.salary, a.emp_rank, a.date_diff FROM
+	( 
+		SELECT employees.emp_no, salary, 
+        YEAR(dept_emp.to_date) - YEAR(dept_emp.from_date) AS date_diff,
+        DENSE_RANK() OVER (PARTITION BY emp_no ORDER BY salary DESC) AS emp_rank FROM salaries
+        JOIN employees ON employees.emp_no = salaries.emp_no
+        JOIN dept_emp ON dept_emp.emp_no = employees.emp_no
+        WHERE employees.emp_no BETWEEN 10500 AND 10600 AND YEAR(dept_emp.to_date) - YEAR(dept_emp.from_date) > 4
+        GROUP BY salaries.salary
+	) AS a;
+
+
+
+SELECT emp_no,salary,
+LAG(salary) OVER (PARTITION BY emp_no ORDER BY salary) AS  previous_salary,
+LEAD(salary) OVER (PARTITION BY emp_no ORDER BY salary) AS  next_salary,
+LEAD(salary) OVER(PARTITION BY emp_no ORDER BY salary) - salary AS diff_previous_current_salary,
+salary - LAG(salary) OVER(PARTITION BY emp_no ORDER BY salary) AS diff_previous_current_salary
+FROM salaries 
+WHERE salaries.emp_no BETWEEN 10500 AND 10600 AND salaries.salary > 80000
+ORDER BY emp_no;
+
+SELECT emp_no,salary,
+LAG(salary) OVER (PARTITION BY emp_no ORDER BY salary) AS  previous_salary,
+LAG(salary,2) OVER (PARTITION BY emp_no ORDER BY salary) AS  previous_salary,
+LEAD(salary) OVER (PARTITION BY emp_no ORDER BY salary) AS  next_salary,
+LEAD(salary,2) OVER (PARTITION BY emp_no ORDER BY salary) AS  next_salary
+FROM salaries 
+ORDER BY emp_no ASC
+LIMIT 1000;
+
+
+
+
+
+
+
 
 
 
