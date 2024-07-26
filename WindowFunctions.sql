@@ -62,7 +62,7 @@ SELECT a.emp_no, a.salary, a.emp_rank, a.date_diff FROM
         GROUP BY salaries.salary
 	) AS a;
 
-
+-- Exercise 274
 
 SELECT emp_no,salary,
 LAG(salary) OVER (PARTITION BY emp_no ORDER BY salary) AS  previous_salary,
@@ -82,7 +82,21 @@ FROM salaries
 ORDER BY emp_no ASC
 LIMIT 1000;
 
+-- Exercise 283
 
+SELECT dept_emp.emp_no, dept_emp.from_date, dept_emp.to_date, MAX(salaries.salary),
+(
+	SELECT dept_no FROM departments 
+    JOIN departments ON departments.dept_no = dept_emp.dept_no
+    WHERE YEAR(dept_emp.to_date) <= 2002 AND dept_emp.to_date = YEAR(MAX(dept_emp.to_date)) 
+    
+) AS latest_department
+FROM dept_emp 
+JOIN salaries ON salaries.emp_no = dept_emp.emp_no 
+
+ WHERE YEAR(dept_emp.from_date) >= 2000 AND YEAR(dept_emp.to_date) <= 2002
+ GROUP BY dept_emp.emp_no
+ ORDER BY emp_no;
 
 
 
