@@ -84,23 +84,56 @@ LIMIT 1000;
 
 -- Exercise 283
 
-SELECT dept_emp.emp_no, dept_emp.from_date, dept_emp.to_date, MAX(salaries.salary),
-(
-	SELECT dept_no FROM departments 
-    JOIN departments ON departments.dept_no = dept_emp.dept_no
-    WHERE YEAR(dept_emp.to_date) <= 2002 AND dept_emp.to_date = YEAR(MAX(dept_emp.to_date)) 
-    
-) AS latest_department
-FROM dept_emp 
-JOIN salaries ON salaries.emp_no = dept_emp.emp_no 
-
- WHERE YEAR(dept_emp.from_date) >= 2000 AND YEAR(dept_emp.to_date) <= 2002
- GROUP BY dept_emp.emp_no
- ORDER BY emp_no;
+SELECT e_no.emp_no, e_no.from_date, latest_dept.dept_name, latest_salary.salary
+FROM
+(SELECT emp_no,dept_no, from_date  FROM dept_emp WHERE from_date BETWEEN '2000-01-01' AND '2002-01-01' GROUP BY emp_no) AS e_no
+LEFT JOIN 
+(SELECT dept_name,dept_no FROM departments) AS latest_dept ON latest_dept.dept_no = e_no.dept_no
+JOIN
+(SELECT emp_no,salary,from_date FROM salaries WHERE from_date BETWEEN '2000-01-01' AND '2002-01-01' GROUP BY emp_no) AS latest_salary ON e_no.emp_no = latest_salary.emp_no
+ORDER BY  e_no.emp_no ASC;
 
 
+SELECT * FROM employees.departments;
 
 
+SELECT
+de2.emp_no, d.dept_name, s2.salary, AVG(s2.salary) OVER w AS average_salary_per_department
+FROM
+(SELECT
+  de.emp_no, de.dept_no, de.from_date, de.to_date
+FROM
+    dept_emp de
+        JOIN
+(SELECT
+emp_no, MAX(from_date) AS from_date
+FROM
+dept_emp
+GROUP BY emp_no) de1 ON de1.emp_no = de.emp_no
+WHERE
+    de.to_date < '2002-01-01'
+AND de.from_date > '2000-01-01'
+AND de.from_date = de1.from_date) de2
+JOIN
+    (SELECT
+    s1.emp_no, s.salary, s.from_date, s.to_date
+FROM
+    salaries s
+JOIN
+    (SELECT
+emp_no, MAX(from_date) AS from_date
+FROM
+salaries
+    GROUP BY emp_no) s1 ON s.emp_no = s1.emp_no
+WHERE
+    s.to_date < '2002-01-01'
+AND s.from_date > '2000-01-01'
+AND s.from_date = s1.from_date) s2 ON s2.emp_no = de2.emp_no
+JOIN
+    departments d ON d.dept_no = de2.dept_no
+GROUP BY de2.emp_no, d.dept_name
+WINDOW w AS (PARTITION BY de2.dept_no)
+ORDER BY de2.emp_no, salary;
 
 
 
