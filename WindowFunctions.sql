@@ -83,57 +83,23 @@ ORDER BY emp_no ASC
 LIMIT 1000;
 
 -- Exercise 283
+USE employees;
 
-SELECT e_no.emp_no, e_no.from_date, latest_dept.dept_name, latest_salary.salary
+
+SELECT de2.emp_no, dept.dept_name, s3.salary, AVG(s3.salary) OVER (PARTITION BY dept.dept_name) AS verage_salary_per_department
 FROM
-(SELECT emp_no,dept_no, from_date  FROM dept_emp WHERE from_date BETWEEN '2000-01-01' AND '2002-01-01' GROUP BY emp_no) AS e_no
-LEFT JOIN 
-(SELECT dept_name,dept_no FROM departments) AS latest_dept ON latest_dept.dept_no = e_no.dept_no
+(SELECT de.emp_no, de.from_date, de.to_date, de.dept_no FROM dept_emp AS de
 JOIN
-(SELECT emp_no,salary,from_date FROM salaries WHERE from_date BETWEEN '2000-01-01' AND '2002-01-01' GROUP BY emp_no) AS latest_salary ON e_no.emp_no = latest_salary.emp_no
-ORDER BY  e_no.emp_no ASC;
-
-
-SELECT * FROM employees.departments;
-
-
-SELECT
-de2.emp_no, d.dept_name, s2.salary, AVG(s2.salary) OVER w AS average_salary_per_department
-FROM
-(SELECT
-  de.emp_no, de.dept_no, de.from_date, de.to_date
-FROM
-    dept_emp de
-        JOIN
-(SELECT
-emp_no, MAX(from_date) AS from_date
-FROM
-dept_emp
-GROUP BY emp_no) de1 ON de1.emp_no = de.emp_no
-WHERE
-    de.to_date < '2002-01-01'
-AND de.from_date > '2000-01-01'
-AND de.from_date = de1.from_date) de2
+(SELECT emp_no, MAX(from_date) AS from_date FROM dept_emp GROUP BY emp_no) AS de1 ON de.emp_no = de1.emp_no   WHERE de.from_date > '2000-01-01' AND de.to_date < '2002-01-01' AND de.from_date = de1.from_date) AS de2
 JOIN
-    (SELECT
-    s1.emp_no, s.salary, s.from_date, s.to_date
-FROM
-    salaries s
+(SELECT dept_name, dept_no FROM departments) AS dept ON de2.dept_no = dept.dept_no
 JOIN
-    (SELECT
-emp_no, MAX(from_date) AS from_date
-FROM
-salaries
-    GROUP BY emp_no) s1 ON s.emp_no = s1.emp_no
-WHERE
-    s.to_date < '2002-01-01'
-AND s.from_date > '2000-01-01'
-AND s.from_date = s1.from_date) s2 ON s2.emp_no = de2.emp_no
-JOIN
-    departments d ON d.dept_no = de2.dept_no
-GROUP BY de2.emp_no, d.dept_name
-WINDOW w AS (PARTITION BY de2.dept_no)
-ORDER BY de2.emp_no, salary;
+(SELECT s.emp_no, salary FROM salaries AS s
+JOIN 
+(SELECT emp_no, MAX(from_date) AS from_date FROM salaries GROUP BY emp_no) AS s2 ON s2.emp_no = s.emp_no  WHERE s.from_date > '2000-01-01' AND s.to_date < '2002-01-01' AND s.from_date = s2.from_date) AS s3 ON s3.emp_no = de2.emp_no
+ORDER BY de2.emp_no, s3.salary
+;
+
 
 
 
